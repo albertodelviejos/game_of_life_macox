@@ -44,24 +44,24 @@ class _GameOfLifeState extends State<GameOfLife> {
     }
   }
 
-  int _countAliveNeighbors(int row, int column) {
-    int count = 0;
-    for (int i = -1; i <= 1; i++) {
-      for (int j = -1; j <= 1; j++) {
-        if (i == 0 && j == 0) continue;
-        int r = row + i;
-        int c = column + j;
-        if (r >= 0 &&
-            r < _rows &&
-            c >= 0 &&
-            c < _columns &&
-            _grid[r][c] == _alive) {
-          count++;
-        }
-      }
-    }
-    return count;
-  }
+  // int _countAliveNeighbors(int row, int column) {
+  //   int count = 0;
+  //   for (int i = -1; i <= 1; i++) {
+  //     for (int j = -1; j <= 1; j++) {
+  //       if (i == 0 && j == 0) continue;
+  //       int r = row + i;
+  //       int c = column + j;
+  //       if (r >= 0 &&
+  //           r < _rows &&
+  //           c >= 0 &&
+  //           c < _columns &&
+  //           _grid[r][c] == _alive) {
+  //         count++;
+  //       }
+  //     }
+  //   }
+  //   return count;
+  // }
 
   void _tick() {
     setState(() {
