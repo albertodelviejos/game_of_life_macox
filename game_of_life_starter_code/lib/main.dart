@@ -1,9 +1,13 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:game_of_life_starter_code/alive_cell.dart';
+import 'package:game_of_life_starter_code/timer_singleton.dart';
+
+import 'grid.dart';
 
 const int _alive = 1;
 const int _dead = 0;
+bool isFirstTime = true;
+TimerSingleton _timerSingleton = TimerSingleton.instance;
 
 void main() {
   //add this
@@ -20,97 +24,62 @@ class GameOfLife extends StatefulWidget {
 }
 
 class _GameOfLifeState extends State<GameOfLife> {
-  late List<List<int>> _grid;
-  late int _rows;
-  late int _columns;
-  late int _generation;
-  late Random genLife = Random();
+  late final Grid _grid = Grid(gridHeight: 30, gridWidth: 30);
+  final List<List<int>> _visualGrid = [];
 
   @override
   void initState() {
     super.initState();
-    _rows = 30;
-    _columns = 30;
-    _generation = 0;
-    _initGrid();
-  }
-
-  void _initGrid() {
-    _grid = List.generate(_rows, (_) => List.filled(_columns, _dead));
-    for (int i = 0; i < _rows; i++) {
-      for (int j = 0; j < _columns; j++) {
-        _grid[i][j] = genLife.nextBool() ? 1 : 0;
-      }
+    _grid.initializeEmptyGrid();
+    for (int i = 0; i < _grid.getGridHeight; i++) {
+      _visualGrid.add(List.generate(_grid.getGridWidth, (_) => 0));
     }
-  }
-
-  // int _countAliveNeighbors(int row, int column) {
-  //   int count = 0;
-  //   for (int i = -1; i <= 1; i++) {
-  //     for (int j = -1; j <= 1; j++) {
-  //       if (i == 0 && j == 0) continue;
-  //       int r = row + i;
-  //       int c = column + j;
-  //       if (r >= 0 &&
-  //           r < _rows &&
-  //           c >= 0 &&
-  //           c < _columns &&
-  //           _grid[r][c] == _alive) {
-  //         count++;
-  //       }
-  //     }
-  //   }
-  //   return count;
-  // }
-
-  void _tick() {
-    setState(() {
-      _generation++;
-      List<List<int>> nextGrid =
-          List.generate(_rows, (_) => List.filled(_columns, 0));
-      for (int i = 0; i < _rows; i++) {
-        for (int j = 0; j < _columns; j++) {
-          int neighbors = _countAliveNeighbors(i, j);
-          if (_grid[i][j] == _alive) {
-            if (neighbors == 2 || neighbors == 3) {
-              nextGrid[i][j] = _alive;
-            } else {
-              nextGrid[i][j] = _dead;
-            }
-          } else {
-            if (neighbors == 3) {
-              nextGrid[i][j] = _alive;
-            } else {
-              nextGrid[i][j] = _dead;
-            }
-          }
-        }
-      }
-      _grid = nextGrid;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Generation: $_generation'),
+        title: Text('Generation ${_timerSingleton.tick}'),
       ),
       body: GridView.count(
-        crossAxisCount: _columns,
-        children: List.generate(_rows * _columns, (index) {
-          int row = index ~/ _columns;
-          int column = index % _columns;
-          return Container(
-            decoration: BoxDecoration(
-              color: _grid[row][column] == _alive ? Colors.black : Colors.white,
-              border: Border.all(color: Colors.grey),
+        crossAxisCount: _grid.getGridWidth,
+        children:
+            List.generate(_grid.getGridHeight * _grid.getGridWidth, (index) {
+          int row = index ~/ _grid.getGridWidth;
+          int column = index % _grid.getGridHeight as int;
+          return GestureDetector(
+            onTap: () => setState(() {
+              _visualGrid[row][column] = 1;
+            }),
+            child: Container(
+              decoration: BoxDecoration(
+                color: (isFirstTime
+                        ? (_visualGrid[row][column] == 1)
+                        : (_grid.getGridMatrix[row][column] is AliveCell))
+                    ? Colors.black
+                    : Colors.white,
+                border: Border.all(color: Colors.grey),
+              ),
             ),
           );
         }),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _tick,
+        onPressed: () {
+          if (isFirstTime) {
+            _grid.updateValuesFromBinaryList(_visualGrid);
+            _grid.binaryListDebugPrinter(_visualGrid);
+            isFirstTime = false;
+            _timerSingleton.startTimer(
+                onTick: () => setState(() {
+                      _grid.buildNextIteration();
+                    }));
+          }
+          // setState(() {
+          //   _grid.buildNextIteration();
+          // });
+        },
         child: const Icon(Icons.play_arrow),
       ),
     );

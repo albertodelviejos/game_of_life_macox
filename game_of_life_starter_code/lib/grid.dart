@@ -12,27 +12,59 @@ class Grid {
       : _gridHeight = gridHeight,
         _gridWidth = gridWidth;
 
-  void _initializeEmptyGrid() {
+  void initializeEmptyGrid() {
     _gridMatrix = [];
     for (int i = 0; i < _gridHeight; i++) {
       _gridMatrix!.add(List.generate(_gridWidth, (index) => DeadCell()));
     }
   }
 
-  get gridMatrix => _gridMatrix;
+  get getGridMatrix => _gridMatrix;
+  get getGridHeight => _gridHeight;
+  get getGridWidth => _gridWidth;
 
-  void setInitialValues(List<List<int>> initialValues) {
+  void updateValuesFromBinaryList(List<List<int>> initialValues) {
     for (int i = 0; i < _gridHeight; i++) {
-      for (var element in initialValues[i]) {
-        if (element == 1) {
-          _gridMatrix![i][initialValues[i].indexOf(element)] = AliveCell();
-        }
+      for (int j = 0; j < _gridWidth; j++) {
+        _gridMatrix![i][j] =
+            (initialValues[i][j] == 1) ? AliveCell() : DeadCell();
       }
     }
   }
 
-  void buildNextIteration(){
-    //TODO Logic Of The Game
+  void buildNextIteration() {
+    List<List<int>> nextGrid =
+        List.generate(_gridWidth, (_) => List.filled(_gridHeight, 0));
+    for (int i = 0; i < _gridHeight; i++) {
+      for (int j = 0; j < _gridWidth; j++) {
+        int neighbors = _countAliveNeighbors(i, j);
+        if (_gridMatrix![i][j] is AliveCell) {
+          if (neighbors == 2 || neighbors == 3) {
+            nextGrid[i][j] = 1;
+          } else {
+            nextGrid[i][j] = 0;
+          }
+        } else {
+          if (neighbors == 3) {
+            nextGrid[i][j] = 1;
+          } else {
+            nextGrid[i][j] = 0;
+          }
+        }
+      }
+    }
+    updateValuesFromBinaryList(nextGrid);
+  }
+
+  void binaryListDebugPrinter(List<List<int>> binaryList) {
+    String visual = '';
+    for (var element in binaryList) {
+      for (var element2 in element) {
+        visual += '$element2';
+      }
+      visual += '\n';
+    }
+    print(visual);
   }
 
   int _countAliveNeighbors(int row, int column) {
@@ -46,7 +78,7 @@ class Grid {
             r < _gridHeight &&
             c >= 0 &&
             c < _gridWidth &&
-            _gridMatrix[r][c] == _alive) {
+            _gridMatrix![r][c] is AliveCell) {
           count++;
         }
       }
